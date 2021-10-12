@@ -59,7 +59,6 @@ dependencies {
     implementation "net.corda.kotlin:kotlin-stdlib-jdk8-osgi:$kotlinVersion"
 
     cordaProvided "net.corda:corda-application:$cordaAPIVersion"
-    cordaProvided "net.corda:corda-client-rpc:$cordaAPIVersion"
     cordaProvided "net.corda:corda-crypto-api:$cordaAPIVersion"
     cordaProvided "net.corda:corda-legacy-api:$cordaAPIVersion"
 

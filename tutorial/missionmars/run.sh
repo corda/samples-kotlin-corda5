@@ -9,15 +9,17 @@ cordapp-builder create --cpk contracts/build/libs/corda5-missionmars-contracts-1
 echo "--Step 3: Configure the network"
 corda-cli network config docker-compose missionmars-network
 
-echo "--Step 4: Creating docker compose yaml file."
-corda-cli network deploy -n missionmars-network -f mission-mars.yaml -t 5.0.0-devpreview-rc03 > docker-compose.yaml
+echo "--Step 4: Creating docker compose yaml file and starting docker containers.--"
+corda-cli network deploy -n missionmars-network -f mission-mars.yaml | docker-compose -f - up -d
 
-echo "--Step 5: Creating docker containers."
-docker-compose -f docker-compose.yaml up -d
-
-echo "--Step 6: Starting docker containers."
+echo "--Listening to the docker processes.--"
 corda-cli network wait -n missionmars-network
 
-echo "--Nodes Status: "
-corda-cli network status -n missionmars-network
+echo "--Step 5: Install the cpb file into the network.--"
+corda-cli package install -n missionmars-network missionMars.cpb
 
+echo "--Listening to the docker processes.--"
+corda-cli network wait -n missionmars-network
+
+echo "++Cordapp Setup Finished, Nodes Status: ++"
+corda-cli network status -n missionmars-network

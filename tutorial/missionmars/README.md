@@ -1,6 +1,9 @@
-corda-cli package install -n missionmars-network missionMars.cpb
+# Corda5 Tutorial Cordapp: Mission Mars
+
+Please refer to the documentation for detail walk through of developing and running this App at [here](https://docs.r3.com/en/platform/corda/5.0-dev-preview-1/tutorials/building-cordapp/c5-basic-cordapp-intro.html)
 
 
+Flow #1 input: 
 ```json
 {
   "rpcStartFlowRequest": {
@@ -12,8 +15,7 @@ corda-cli package install -n missionmars-network missionMars.cpb
   } 
 }
 ```
-1e9f4d37-cb3b-4238-909d-13f0368fb198
-
+Flow #2 input: 
 ```json
 {
   "rpcStartFlowRequest": {
@@ -25,18 +27,21 @@ corda-cli package install -n missionmars-network missionMars.cpb
   } 
 }
 ```
-
+Flow #3 input: (The voucherID need to be retrieved from flow #2's output. Use the /flowstarter/flowoutcomeforclientid/{clientid} method, and input [launchpad-3])
 ```json
 {
   "rpcStartFlowRequest": {
     "clientId": "launchpad-4", 
     "flowName": "net.corda.missionMars.flows.RedeemBoardingTicketWithVoucherInitiator", 
     "parameters": { 
-      "parametersInJson": "{\"voucherID\": \"1e9f4d37-cb3b-4238-909d-13f0368fb198\", \"holder\": \"C=US, L=New York, O=Peter, OU=INC\"}" 
+      "parametersInJson": "{\"voucherID\": \"4016e315-931c-4630-8b04-58ad37b8d644\", \"holder\": \"C=US, L=New York, O=Peter, OU=INC\"}" 
     } 
   } 
 }
 ```
 
+How to shut down the app
+```
 corda-cli network terminate -n missionmars-network -ry
+```
 

@@ -34,16 +34,6 @@ subprojects {
         }
     }
 
-    pluginManager.withPlugin('org.jetbrains.kotlin.plugin.jpa') {
-        noArg {
-            annotations(
-                'javax.persistence.Entity',
-                'javax.persistence.Embeddable',
-                'javax.persistence.MappedSuperclass'
-            )
-        }
-    }
-
     pluginManager.withPlugin('org.jetbrains.kotlin.plugin.allopen') {
         allOpen {
             annotations(

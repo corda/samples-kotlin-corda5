@@ -19,7 +19,6 @@ import net.corda.v5.application.services.json.JsonMarshallingService
 import net.corda.v5.application.services.json.parseJson
 import net.corda.v5.application.services.persistence.PersistenceService
 import net.corda.v5.base.annotations.Suspendable
-import net.corda.v5.base.types.NonEmptySet
 import net.corda.v5.ledger.contracts.Command
 import net.corda.v5.ledger.contracts.StateAndRef
 import net.corda.v5.ledger.contracts.requireThat
@@ -87,7 +86,7 @@ class RedeemBoardingTicketWithVoucherInitiator @JsonConstructor constructor(priv
                 queryName = "VaultState.findByStateStatus",
                 namedParameters = mapOf("stateStatus" to StateStatus.UNCONSUMED),
                 postFilter = SetBasedVaultQueryFilter.Builder()
-                        .withContractStateClassNames(NonEmptySet.of(BoardingTicket::class.java.name))
+                        .withContractStateClassNames(setOf(BoardingTicket::class.java.name))
                         .build(),
                 postProcessorName = "Corda.IdentityStateAndRefPostProcessor"
         )
