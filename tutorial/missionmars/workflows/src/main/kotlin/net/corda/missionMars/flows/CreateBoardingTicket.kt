@@ -52,14 +52,14 @@ data class CreateBoardingTicketInitiator @JsonConstructor constructor(private va
         val notary = notaryLookup.notaryIdentities.first()
 
         //Building the output BoardingTicket state
-        val basket = BoardingTicket(description = ticketDescription,marsExpress = flowIdentity.ourIdentity,daysTillLaunch = daysTillLaunch)
+        val ticket = BoardingTicket(description = ticketDescription,marsExpress = flowIdentity.ourIdentity,daysTillLaunch = daysTillLaunch)
 
 
         //building the Transaction
         val txCommand = Command(BoardingTicketContract.Commands.CreateTicket(), listOf(flowIdentity.ourIdentity.owningKey))
         val txBuilder = transactionBuilderFactory.create()
                 .setNotary(notary)
-                .addOutputState(basket, BoardingTicketContract.ID)
+                .addOutputState(ticket, BoardingTicketContract.ID)
                 .addCommand(txCommand)
 
         // Verify that the transaction is valid.
