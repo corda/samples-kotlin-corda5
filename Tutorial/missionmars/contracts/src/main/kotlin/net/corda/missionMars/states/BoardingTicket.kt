@@ -14,7 +14,7 @@ import java.util.*
 data class BoardingTicket(
         var description : String, //Brand or type
         var marsExpress : Party, //Origin of the ticket
-        var owner: Party, //The person who exchange the basket of apple with the stamp.
+        var owner: Party, //The person who owns the space trip ticket.
         var daysUntilLaunch: Int)
     : ContractState, JsonRepresentable {
 
@@ -47,8 +47,8 @@ data class BoardingTicket(
 }
 
 data class BoardingTicketDto(
-        var description : String, //Brand or type
-        var marsExpress : String, //Origin of the apple
-        var owner: String, //The person who exchange the basket of apple with the stamp.
+        var description : String,
+        var marsExpress : String, 
+        var owner: String, 
         var daysUntilLaunch: String
 )
