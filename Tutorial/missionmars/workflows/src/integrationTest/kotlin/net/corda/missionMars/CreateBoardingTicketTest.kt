@@ -35,13 +35,13 @@ class CreateBoardingTicketTest {
             val partyB = getNode("PartyB")
             getNode("PartyA").httpRpc(Credentials("angelenos","password")){
                 val clientId = "Launch Pad 1"
-                val daysTillLaunch = 10
+                val daysUntilLaunch = 10
                 val flowId = with(startFlow(
                         flowName = CreateBoardingTicketInitiator::class.java.name,
                         clientId = clientId,
                         parametersInJson = CreateBoardingTickerParams(
                                 ticketDescription = "Space Shuttle 323 - 16C",
-                                daysTillLaunch = daysTillLaunch.toString(),
+                                daysUntilLaunch = daysUntilLaunch.toString(),
                         )
                 )){
                     Assertions.assertThat(status).isEqualTo(HttpStatus.SC_OK)
@@ -60,10 +60,10 @@ class CreateBoardingTicketTest {
         }
     }
     //helper method.
-    private fun CreateBoardingTickerParams(ticketDescription: String, daysTillLaunch: String): String {
+    private fun CreateBoardingTickerParams(ticketDescription: String, daysUntilLaunch: String): String {
         return GsonBuilder()
                 .create()
-                .toJson(mapOf("ticketDescription" to ticketDescription, "daysTillLaunch" to daysTillLaunch))
+                .toJson(mapOf("ticketDescription" to ticketDescription, "daysUntilLaunch" to daysUntilLaunch))
     }
 
 
