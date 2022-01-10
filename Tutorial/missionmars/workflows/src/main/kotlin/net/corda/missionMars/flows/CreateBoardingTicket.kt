@@ -7,6 +7,7 @@ import net.corda.systemflows.FinalityFlow
 import net.corda.v5.application.flows.*
 import net.corda.v5.application.flows.flowservices.FlowEngine
 import net.corda.v5.application.flows.flowservices.FlowIdentity
+import net.corda.v5.application.identity.CordaX500Name
 import net.corda.v5.application.injection.CordaInject
 import net.corda.v5.application.services.json.JsonMarshallingService
 import net.corda.v5.application.services.json.parseJson
@@ -49,7 +50,7 @@ data class CreateBoardingTicketInitiator @JsonConstructor constructor(private va
         }
 
         //Find notary
-        val notary = notaryLookup.notaryIdentities.first()
+        val notary = notaryLookup.getNotary(CordaX500Name.parse("O=notary, L=London, C=GB"))!!
 
         //Building the output BoardingTicket state
         val ticket = BoardingTicket(description = ticketDescription,marsExpress = flowIdentity.ourIdentity,daysUntilLaunch = daysUntilLaunch)

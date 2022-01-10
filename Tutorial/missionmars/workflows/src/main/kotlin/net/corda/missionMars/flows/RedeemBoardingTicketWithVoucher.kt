@@ -68,9 +68,6 @@ class RedeemBoardingTicketWithVoucherInitiator @JsonConstructor constructor(priv
         }
         val recipientParty = identityService.partyFromName(holder) ?: throw NoSuchElementException("No party found for X500 name $holder")
 
-        //Find notary
-        val notary = notaryLookup.notaryIdentities.first()
-
         //Query the MarsVoucher & the boardingTicket
         val cursor = persistenceService.query<StateAndRef<MarsVoucher>>(
                 "LinearState.findByUuidAndStateStatus",
@@ -90,11 +87,14 @@ class RedeemBoardingTicketWithVoucherInitiator @JsonConstructor constructor(priv
                         .build(),
                 postProcessorName = "Corda.IdentityStateAndRefPostProcessor"
         )
-        val boardingTicketStateAndRef= cursor2.poll(100, 20.seconds).values.first()
+        val boardingTicketStateAndRef= cursor2.poll(100, 20.seconds).values.last()
         val originalBoardingTicketState= boardingTicketStateAndRef.state.data
 
         //Building the output
         val outputBoardingTicket = originalBoardingTicketState.changeOwner(recipientParty)
+
+        //Find notary
+        val notary = marsVoucherStateAndRef.state.notary
 
         //Building the transaction
         val txCommand = Command(BoardingTicketContract.Commands.RedeemTicket(), listOf(flowIdentity.ourIdentity.owningKey,recipientParty.owningKey))

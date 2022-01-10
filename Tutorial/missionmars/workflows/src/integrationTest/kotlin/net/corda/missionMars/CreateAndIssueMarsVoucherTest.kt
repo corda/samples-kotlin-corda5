@@ -16,6 +16,7 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.Duration
+import java.time.LocalDateTime
 import java.util.*
 
 class CreateAndIssueMarsVoucherTest {
@@ -33,14 +34,17 @@ class CreateAndIssueMarsVoucherTest {
     @Test
     fun `Create And Issue MarsVoucher Test`(){
         TestNetwork.forNetwork("missionmars-network").use {
+            //get Nodes
             val partyB = getNode("PartyB")
+
+            //Create and Issue MarsVoucher
             getNode("PartyA").httpRpc(Credentials("angelenos","password")){
-                val clientId = "Launch Pad 1"
+                val clientId = "Launch Pad 1" + LocalDateTime.now()
                 val flowId = with(startFlow(
                         flowName = CreateAndIssueMarsVoucherInitiator::class.java.name,
                         clientId = clientId,
                         parametersInJson = CreateAndIssueMarsVoucherParams(
-                                voucherDesc = "Space Shuttle 323",
+                                voucherDesc = "Space Shuttle 324",
                                 holder = partyB.x500Name.toString(),
                         )
                 )){
@@ -56,20 +60,24 @@ class CreateAndIssueMarsVoucherTest {
                         Assertions.assertThat(body.`object`.get("status")).isEqualTo("COMPLETED")
                     }
                 }
+                with(retrieveOutcome(flowId)){
+                    val resultString = body.`object`.get("resultJson") as String
+                    println("--------------------------------")
+                    println("Create and Issue Mars Voucher Result: ")
+                    println("Flow ID: " + flowId)
+                    println(resultString)
+                    println("--------------------------------")
+                }
             }
         }
     }
+
     //helper method.
     private fun CreateAndIssueMarsVoucherParams(voucherDesc: String, holder: String): String {
         return GsonBuilder()
                 .create()
                 .toJson(mapOf("voucherDesc" to voucherDesc, "holder" to holder))
     }
-
-
-
-
-
     private fun startFlow(
             flowName: String,
             clientId: String = "client-${UUID.randomUUID()}",
