@@ -26,13 +26,25 @@ class MarsVoucherContract : Contract {
             is BoardingTicketContract.Commands.RedeemTicket-> requireThat {
                 //Transaction verification will happen in BoardingTicket Contract
             }
+            is Commands.Transfer -> requireThat {
+                "This transaction should consume one Marsvoucher states".using(tx.inputStates.size == 1)
+                val input = tx.inputsOfType(MarsVoucher::class.java)[0]
+                val output = tx.outputsOfType(MarsVoucher::class.java)[0]
+                "You cannot gift the voucher to yourself".using(input.holder != output.holder)
+                null
+            }
         }
     }
+
+
+
+
 
     // Used to indicate the transaction's intent.
     interface Commands : CommandData {
         //In our hello-world app, We will have two commands.
         class Issue : Commands
+        class Transfer: Commands
     }
 
     companion object {

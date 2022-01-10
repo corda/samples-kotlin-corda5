@@ -28,6 +28,11 @@ data class MarsVoucher (
         )
     }
 
+    fun changeOwner(newOwner: Party): MarsVoucher {
+        return MarsVoucher(voucherDesc, issuer, newOwner, linearId)
+    }
+
+
     override fun toJsonString(): String {
         return Gson().toJson(this.toDto())
     }

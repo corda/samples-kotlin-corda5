@@ -15,6 +15,7 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.Duration
+import java.time.LocalDateTime
 import java.util.*
 
 class CreateBoardingTicketTest {
@@ -32,9 +33,8 @@ class CreateBoardingTicketTest {
     @Test
     fun `Create Boarding Ticker Test`(){
         TestNetwork.forNetwork("missionmars-network").use {
-            val partyB = getNode("PartyB")
             getNode("PartyA").httpRpc(Credentials("angelenos","password")){
-                val clientId = "Launch Pad 1"
+                val clientId = "Launch Pad 1" + LocalDateTime.now()
                 val daysUntilLaunch = 10
                 val flowId = with(startFlow(
                         flowName = CreateBoardingTicketInitiator::class.java.name,
@@ -55,6 +55,13 @@ class CreateBoardingTicketTest {
                         Assertions.assertThat(status).isEqualTo(HttpStatus.SC_OK)
                         Assertions.assertThat(body.`object`.get("status")).isEqualTo("COMPLETED")
                     }
+                }
+                with(retrieveOutcome(flowId)){
+                    val resultString = body.`object`.get("resultJson") as String
+                    println("--------------------------------")
+                    println("Create Boarding Ticket Result: ")
+                    println(resultString)
+                    println("--------------------------------")
                 }
             }
         }

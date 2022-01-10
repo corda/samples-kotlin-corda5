@@ -60,7 +60,7 @@ class TemplateFlow @JsonConstructor constructor(private val params: RpcStartFlow
 
         val recipientParty = identityService.partyFromName(target) ?: throw NoSuchElementException("No party found for X500 name $target")
 
-        val notary = notaryLookup.notaryIdentities.first()
+        val notary = notaryLookup.getNotary(CordaX500Name.parse("O=notary, L=London, C=GB"))!!
 
         // Stage 1.
         // Generate an unsigned transaction.

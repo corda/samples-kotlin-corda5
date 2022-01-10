@@ -1,8 +1,8 @@
 package net.corda.missionMars.flows
 
+import net.corda.missionMars.contracts.BoardingTicketContract
 import net.corda.missionMars.contracts.MarsVoucherContract
 import net.corda.missionMars.states.MarsVoucher
-import net.corda.missionMars.states.TemplateState
 import net.corda.systemflows.CollectSignaturesFlow
 import net.corda.systemflows.FinalityFlow
 import net.corda.systemflows.ReceiveFinalityFlow
@@ -16,18 +16,22 @@ import net.corda.v5.application.injection.CordaInject
 import net.corda.v5.application.services.IdentityService
 import net.corda.v5.application.services.json.JsonMarshallingService
 import net.corda.v5.application.services.json.parseJson
+import net.corda.v5.application.services.persistence.PersistenceService
 import net.corda.v5.base.annotations.Suspendable
-import net.corda.v5.ledger.UniqueIdentifier
+import net.corda.v5.base.util.seconds
 import net.corda.v5.ledger.contracts.Command
-import net.corda.v5.ledger.contracts.requireThat
+import net.corda.v5.ledger.contracts.StateAndRef
 import net.corda.v5.ledger.services.NotaryLookupService
+import net.corda.v5.ledger.services.vault.StateStatus
 import net.corda.v5.ledger.transactions.SignedTransaction
 import net.corda.v5.ledger.transactions.SignedTransactionDigest
 import net.corda.v5.ledger.transactions.TransactionBuilderFactory
+import java.util.*
+import kotlin.NoSuchElementException
 
 @InitiatingFlow
 @StartableByRPC
-class CreateAndIssueMarsVoucherInitiator @JsonConstructor constructor(private val params: RpcStartFlowRequestParameters) : Flow<SignedTransactionDigest> {
+class GiftVoucherToFriendInitiator @JsonConstructor constructor(private val params: RpcStartFlowRequestParameters) : Flow<SignedTransactionDigest> {
 
     @CordaInject
     lateinit var flowEngine: FlowEngine
@@ -40,36 +44,48 @@ class CreateAndIssueMarsVoucherInitiator @JsonConstructor constructor(private va
     @CordaInject
     lateinit var identityService: IdentityService
     @CordaInject
-    lateinit var notaryLookup: NotaryLookupService
-    @CordaInject
     lateinit var jsonMarshallingService: JsonMarshallingService
+    @CordaInject
+    lateinit var persistenceService: PersistenceService
 
     @Suspendable
     override fun call(): SignedTransactionDigest {
 
-
         // parse parameters
         val mapOfParams: Map<String, String> = jsonMarshallingService.parseJson(params.parametersInJson)
-        val voucherDesc = with(mapOfParams["voucherDesc"] ?: throw BadRpcStartFlowRequestException("MarsVoucher State Parameter \"voucherDesc\" missing.")) {
+        val voucherID = with(mapOfParams["voucherID"] ?: throw BadRpcStartFlowRequestException("MarsVoucher State Parameter \"voucherID\" missing.")) {
             this
         }
-        val target = with(mapOfParams["holder"] ?: throw BadRpcStartFlowRequestException("MarsVoucher State Parameter \"holder\" missing.")) {
+        val holder = with(mapOfParams["holder"] ?: throw BadRpcStartFlowRequestException("BoardingTicket State Parameter \"holder\" missing.")) {
             CordaX500Name.parse(this)
         }
-        val recipientParty = identityService.partyFromName(target) ?: throw NoSuchElementException("No party found for X500 name $target")
+        val recipientParty = identityService.partyFromName(holder) ?: throw NoSuchElementException("No party found for X500 name $holder")
 
-        //Find the notary
-        val notary = notaryLookup.getNotary(CordaX500Name.parse("O=notary, L=London, C=GB"))!!
+        //Query the MarsVoucher & the boardingTicket
+        val cursor = persistenceService.query<StateAndRef<MarsVoucher>>(
+                "LinearState.findByUuidAndStateStatus",
+                mapOf(
+                        "uuid" to UUID.fromString(voucherID),
+                        "stateStatus" to StateStatus.UNCONSUMED
+                ),
+                "Corda.IdentityStateAndRefPostProcessor"
+        )
+        val marsVoucherStateAndRef = cursor.poll(100, 20.seconds).values.first()
+        val inputMarsVoucher = marsVoucherStateAndRef.state.data
 
-        //Building the output MarsVoucher state
-        val uniqueID = UniqueIdentifier()
-        val newVoucher = MarsVoucher(voucherDesc, flowIdentity.ourIdentity, recipientParty, uniqueID)
+        //Building the output
+        val outputMarsVoucher = inputMarsVoucher.changeOwner(recipientParty)
 
-        //Build transaction
-        val txCommand = Command(MarsVoucherContract.Commands.Issue(), listOf(flowIdentity.ourIdentity.owningKey,recipientParty.owningKey))
+        //Get the Notary from inputRef
+        val notary = marsVoucherStateAndRef.state.notary
+
+        //Building the transaction
+        val signers = (inputMarsVoucher.participants + recipientParty).map { it.owningKey }
+        val txCommand = Command(MarsVoucherContract.Commands.Transfer(), signers)
         val txBuilder = transactionBuilderFactory.create()
                 .setNotary(notary)
-                .addOutputState(newVoucher, MarsVoucherContract.ID)
+                .addInputState(marsVoucherStateAndRef)
+                .addOutputState(outputMarsVoucher, MarsVoucherContract.ID)
                 .addCommand(txCommand)
 
         // Verify that the transaction is valid.
@@ -79,23 +95,31 @@ class CreateAndIssueMarsVoucherInitiator @JsonConstructor constructor(private va
         val partSignedTx = txBuilder.sign()
 
         // Send the state to the counterparty, and receive it back with their signature.
-        val otherPartySession = flowMessaging.initiateFlow(recipientParty)
-        val fullySignedTx = flowEngine.subFlow(CollectSignaturesFlow(partSignedTx, setOf(otherPartySession)))
-
+        val sessions = (inputMarsVoucher.participants - flowIdentity.ourIdentity + recipientParty).map { flowMessaging.initiateFlow(it) }.toSet()
+        val fullySignedTx = flowEngine.subFlow(
+                CollectSignaturesFlow(
+                        partSignedTx, sessions,
+                )
+        )
         // Notarise and record the transaction in both parties' vaults.
-        val notarisedTx = flowEngine.subFlow(FinalityFlow(fullySignedTx, setOf(otherPartySession)))
+        val notarisedTx = flowEngine.subFlow(
+                FinalityFlow(
+                        fullySignedTx, sessions,
+                )
+        )
 
         return SignedTransactionDigest(
                 notarisedTx.id,
-                notarisedTx.tx.outputStates.map { output -> jsonMarshallingService.formatJson(output) },
+                notarisedTx.tx.outputStates.map { it -> jsonMarshallingService.formatJson(it) },
                 notarisedTx.sigs
         )
     }
-}
 
 
-@InitiatedBy(CreateAndIssueMarsVoucherInitiator::class)
-class CreateAndIssueMarsVoucherResponder(val otherPartySession: FlowSession) : Flow<SignedTransaction> {
+    }
+
+@InitiatedBy(GiftVoucherToFriendInitiator::class)
+class GiftVoucherToFriendResponder(val otherPartySession: FlowSession) : Flow<SignedTransaction> {
     @CordaInject
     lateinit var flowEngine: FlowEngine
 
