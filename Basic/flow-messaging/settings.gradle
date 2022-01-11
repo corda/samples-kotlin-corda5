@@ -21,7 +21,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = 'tutorial-missionmars'
+rootProject.name = 'solar-system-messaging'
 
 include('contracts')
 include('workflows')
