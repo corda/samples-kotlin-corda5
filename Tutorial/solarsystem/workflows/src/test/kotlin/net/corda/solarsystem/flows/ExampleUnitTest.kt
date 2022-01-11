@@ -27,6 +27,10 @@ class ExampleUnitTest {
             val inputParams = "{\"message\":\"Hey Mars\", \"planetaryOnly\":\"true\", \"target\":\"${marsX500}\"}"
             createFlow { LaunchProbeFlow(RpcStartFlowRequestParameters(inputParams)) }
 
+            doReturn(notary)
+                    .whenever(flow.notaryLookup)
+                    .getNotary(CordaX500Name.parse("O=notary, L=London, C=GB"))
+
             doReturn(marsX500)
                 .whenever(otherSide)
                 .name
