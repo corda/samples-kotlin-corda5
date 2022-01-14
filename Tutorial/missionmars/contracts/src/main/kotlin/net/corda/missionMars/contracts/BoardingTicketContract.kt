@@ -6,9 +6,8 @@ import net.corda.v5.ledger.contracts.CommandData
 import net.corda.v5.ledger.contracts.Contract
 import net.corda.v5.ledger.contracts.requireThat
 import net.corda.v5.ledger.transactions.LedgerTransaction
+import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.*
 
 class BoardingTicketContract : Contract {
     override fun verify(tx: LedgerTransaction) {
@@ -20,14 +19,20 @@ class BoardingTicketContract : Contract {
             is Commands.CreateTicket -> requireThat {
                 "This transaction should only output one BoardingTicket state".using(tx.outputs.size == 1)
                 "The output BoardingTicket state should have clear description of space trip information".using(output.description != "")
-                "The output BoardingTicket state should have a launching date later then the creation time".using(output.daysUntilLaunch > 0)
+                val current = LocalDateTime.now()
+                val today = LocalDate.of(current.year, current.month, current.dayOfMonth)
+                val launchDay = output.launchDate
+                "The output BoardingTicket state should have a launching date later than today".using(launchDay.isAfter(today))
                 null
             }
             is Commands.RedeemTicket -> requireThat {
                 val input = tx.inputsOfType(MarsVoucher::class.java)[0]
                 "This transaction should consume two states".using(tx.inputStates.size == 2)
                 "The issuer of the BoardingTicket should be the space company which creates the boarding ticket".using(input.issuer == output.marsExpress)
-                "The output BoardingTicket state should have a launching date later then the creation time".using(output.daysUntilLaunch > 0)
+                val current = LocalDateTime.now()
+                val today = LocalDate.of(current.year, current.month, current.dayOfMonth)
+                val launchDay = output.launchDate
+                "The output BoardingTicket state should have a launching date later than today".using(launchDay.isAfter(today))
                 null
             }
         }

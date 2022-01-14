@@ -45,15 +45,15 @@ data class CreateBoardingTicketInitiator @JsonConstructor constructor(private va
         val ticketDescription = with(mapOfParams["ticketDescription"] ?: throw BadRpcStartFlowRequestException("BoardingTicket State Parameter \"ticketDescription\" missing.")) {
             this
         }
-        val daysUntilLaunch = with(mapOfParams["daysUntilLaunch"] ?: throw BadRpcStartFlowRequestException("BoardingTicket State Parameter \"daysUntilLaunch\" missing.")) {
-            this.toInt()
+        val launchDate = with(mapOfParams["launchDate"] ?: throw BadRpcStartFlowRequestException("BoardingTicket State Parameter \"launchDate\" missing.")) {
+            LocalDate.parse(this)
         }
 
         //Find notary
         val notary = notaryLookup.getNotary(CordaX500Name.parse("O=notary, L=London, C=GB"))!!
 
         //Building the output BoardingTicket state
-        val ticket = BoardingTicket(description = ticketDescription,marsExpress = flowIdentity.ourIdentity,daysUntilLaunch = daysUntilLaunch)
+        val ticket = BoardingTicket(description = ticketDescription,marsExpress = flowIdentity.ourIdentity,launchDate = launchDate)
 
 
         //building the Transaction
