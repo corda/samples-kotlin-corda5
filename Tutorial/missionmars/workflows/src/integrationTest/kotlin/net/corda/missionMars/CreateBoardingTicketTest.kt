@@ -35,13 +35,13 @@ class CreateBoardingTicketTest {
         TestNetwork.forNetwork("missionmars-network").use {
             getNode("PartyA").httpRpc(Credentials("angelenos","password")){
                 val clientId = "Launch Pad 1" + LocalDateTime.now()
-                val daysUntilLaunch = 10
+                val launchDate = "2023-11-02"
                 val flowId = with(startFlow(
                         flowName = CreateBoardingTicketInitiator::class.java.name,
                         clientId = clientId,
                         parametersInJson = CreateBoardingTickerParams(
                                 ticketDescription = "Space Shuttle 323 - 16C",
-                                daysUntilLaunch = daysUntilLaunch.toString(),
+                                launchDate = launchDate,
                         )
                 )){
                     Assertions.assertThat(status).isEqualTo(HttpStatus.SC_OK)
@@ -67,10 +67,10 @@ class CreateBoardingTicketTest {
         }
     }
     //helper method.
-    private fun CreateBoardingTickerParams(ticketDescription: String, daysUntilLaunch: String): String {
+    private fun CreateBoardingTickerParams(ticketDescription: String, launchDate: String): String {
         return GsonBuilder()
                 .create()
-                .toJson(mapOf("ticketDescription" to ticketDescription, "daysUntilLaunch" to daysUntilLaunch))
+                .toJson(mapOf("ticketDescription" to ticketDescription, "launchDate" to launchDate))
     }
 
 

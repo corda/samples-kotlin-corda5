@@ -24,7 +24,7 @@ class CreateBoardingTicketUnitTest {
             // NOTE: this probably should be set up in flowTest
             val mockNode = CordaX500Name.parse("O=Mars Express, L=London, C=GB, OU=Space Company")
 
-            val inputParams = "{\"ticketDescription\": \"Space Shuttle 323 - Seat 16B\", \"daysUntilLaunch\": \"10\"}"
+            val inputParams = "{\"ticketDescription\": \"Space Shuttle 323 - Seat 16B\", \"launchDate\": \"2023-11-02\"}"
             createFlow { CreateBoardingTicketInitiator(RpcStartFlowRequestParameters(inputParams)) }
 
             doReturn(notary)
@@ -46,7 +46,7 @@ class CreateBoardingTicketUnitTest {
             doReturn(
                     mapOf(
                             "ticketDescription" to "Space Shuttle 323 - Seat 16B",
-                            "daysUntilLaunch" to "10"
+                            "launchDate" to "2023-11-02"
                     )
             )
                     .whenever(flow.jsonMarshallingService)
@@ -64,8 +64,6 @@ class CreateBoardingTicketUnitTest {
                     it.assertThat(firstValue.owner).isEqualTo(ourIdentity)
                     it.assertThat(firstValue.marsExpress).isEqualTo(ourIdentity)
                     it.assertThat(firstValue.description).isEqualTo("Space Shuttle 323 - Seat 16B")
-                    it.assertThat(firstValue.daysUntilLaunch).isEqualTo(10)
-
                 }
             }
 
