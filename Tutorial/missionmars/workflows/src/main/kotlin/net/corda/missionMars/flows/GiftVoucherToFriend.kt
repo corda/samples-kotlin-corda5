@@ -73,6 +73,10 @@ class GiftVoucherToFriendInitiator @JsonConstructor constructor(private val para
         val marsVoucherStateAndRef = cursor.poll(100, 20.seconds).values.first()
         val inputMarsVoucher = marsVoucherStateAndRef.state.data
 
+        if (inputMarsVoucher.holder != flowIdentity.ourIdentity){
+            throw FlowException("Only the voucher current holder can initiate a gifting transaction")
+        }
+
         //Building the output
         val outputMarsVoucher = inputMarsVoucher.changeOwner(recipientParty)
 
