@@ -56,7 +56,7 @@ const createBoardingTicket = async (ticketDesc, daysUntilLaunch) => {
         clientId: launchPadNumber,
         flowName: "net.corda.missionMars.flows.CreateBoardingTicketInitiator",
         parameters: {
-          parametersInJson: `{"ticketDescription": "${ticketDesc}", "daysUntilLaunch": "${daysUntilLaunch}"}`,
+          parametersInJson: `{"ticketDescription": "${ticketDesc}", "launchDate": "${daysUntilLaunch}"}`,
         },
       },
     });
