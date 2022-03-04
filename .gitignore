@@ -12,3 +12,5 @@
 corda-nodeinfo/corda-nodeinfo.iml
 *~*
 *.cpb
+Tutorial/missionmars/Web-UI/node_modules
+

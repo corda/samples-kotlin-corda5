@@ -58,8 +58,7 @@ const CreateTicket = ({ setLoading }) => {
               onChange={(e) => setTicketDescription(e.target.value)}
             />
             <TextField
-              type="number"
-              label="Days Till Launch"
+              label="Launch Date (e.g.:2023-11-02)"
               variant="outlined"
               value={daysUntilLaunch}
               onChange={(e) => setdaysUntilLaunch(e.target.value)}
